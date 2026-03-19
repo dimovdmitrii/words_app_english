@@ -435,7 +435,7 @@ export function WordsManager({
         </div>
 
         {/* ── Scrollable content ── */}
-        <div className="wm-content">
+        <div className={`wm-content ${tab === 'categories' ? 'wm-content-categories' : ''}`}>
 
           {/* ════ CATEGORIES TAB ════ */}
           {tab === 'categories' && (
@@ -445,66 +445,66 @@ export function WordsManager({
                   No categories yet. Add words with categories first.
                 </p>
               ) : (
-                <>
-                  {/* All words row */}
-                  <div
-                    className={`cat-all-row${isAllSelected ? ' active' : ''}`}
-                    onClick={selectAll}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={e => e.key === 'Enter' && selectAll()}
-                    aria-pressed={isAllSelected}
-                  >
-                    <span
-                      className="cat-indicator"
-                      style={{
-                        background: isAllSelected ? 'var(--accent)' : 'var(--muted)',
-                        boxShadow: isAllSelected ? '0 0 8px rgba(56,189,248,0.55)' : 'none',
-                      }}
-                    />
-                    <span className="cat-name">All words</span>
-                    <span className="cat-count">{allWords.length}</span>
+                <div className="cat-layout">
+                  <div className="cat-top">
+                    <div
+                      className={`cat-all-row${isAllSelected ? ' active' : ''}`}
+                      onClick={selectAll}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => e.key === 'Enter' && selectAll()}
+                      aria-pressed={isAllSelected}
+                    >
+                      <span
+                        className="cat-indicator"
+                        style={{
+                          background: isAllSelected ? 'var(--accent)' : 'var(--muted)',
+                          boxShadow: isAllSelected ? '0 0 8px rgba(56,189,248,0.55)' : 'none',
+                        }}
+                      />
+                      <span className="cat-name">All words</span>
+                      <span className="cat-count">{allWords.length}</span>
+                    </div>
+                    <div className="cat-divider" />
                   </div>
 
-                  <div className="cat-divider" />
-
-                  {/* Category list */}
-                  <div className="cat-list">
-                    {categories.map(cat => {
-                      const color = getCategoryColor(cat)
-                      const isSelected = selectedCats.includes(cat)
-                      return (
-                        <div
-                          key={cat}
-                          className={`cat-item${isSelected ? ' selected' : ''}`}
-                          style={isSelected
-                            ? { borderColor: `${color}55`, background: `${color}10` }
-                            : {}
-                          }
-                          onClick={() => toggleCat(cat)}
-                          role="button"
-                          tabIndex={0}
-                          onKeyDown={e => e.key === 'Enter' && toggleCat(cat)}
-                          aria-pressed={isSelected}
-                        >
-                          <span
-                            className="cat-indicator"
-                            style={{
-                              background: isSelected ? color : 'var(--muted)',
-                              boxShadow: isSelected ? `0 0 8px ${color}88` : 'none',
-                            }}
-                          />
-                          <span className="cat-name">{cat}</span>
-                          <span className="cat-count">{catCounts[cat] ?? 0}</span>
-                          {isSelected && (
-                            <span className="cat-check" style={{ color }}>✓</span>
-                          )}
-                        </div>
-                      )
-                    })}
+                  <div className="cat-scroll">
+                    <div className="cat-list">
+                      {categories.map(cat => {
+                        const color = getCategoryColor(cat)
+                        const isSelected = selectedCats.includes(cat)
+                        return (
+                          <div
+                            key={cat}
+                            className={`cat-item${isSelected ? ' selected' : ''}`}
+                            style={isSelected
+                              ? { borderColor: `${color}55`, background: `${color}10` }
+                              : {}
+                            }
+                            onClick={() => toggleCat(cat)}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={e => e.key === 'Enter' && toggleCat(cat)}
+                            aria-pressed={isSelected}
+                          >
+                            <span
+                              className="cat-indicator"
+                              style={{
+                                background: isSelected ? color : 'var(--muted)',
+                                boxShadow: isSelected ? `0 0 8px ${color}88` : 'none',
+                              }}
+                            />
+                            <span className="cat-name">{cat}</span>
+                            <span className="cat-count">{catCounts[cat] ?? 0}</span>
+                            {isSelected && (
+                              <span className="cat-check" style={{ color }}>✓</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
 
-                  {/* Apply bar */}
                   <div className="cat-apply-bar">
                     <button
                       className="menu-btn primary"
@@ -514,7 +514,7 @@ export function WordsManager({
                       {applyBtnLabel}
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </>
           )}
