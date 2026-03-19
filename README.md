@@ -68,6 +68,22 @@ The app supports generating category-based B1-B2 words via Gemini with a server 
 - UI works locally with `npm run dev`
 - The AI generation endpoint requires running in an environment that serves `/api/*` (e.g. Vercel dev/deploy). If API is unavailable, generation will show an error in UI.
 
+## Pronunciation audio (gTTS)
+
+You can pre-generate MP3 pronunciation files for all words from `public/words.json`.
+
+1. Install Python dependency:
+   ```bash
+   pip install gTTS
+   ```
+2. Generate audio files:
+   ```bash
+   npm run generate:audio
+   ```
+
+The script writes files to `public/sounds/`.  
+If an audio file is missing, the app automatically falls back to browser TTS.
+
 ## Vocabulary
 
 - **Source**: `public/words.json` (array of `{ id, german, russian, category }`).

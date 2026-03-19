@@ -6,9 +6,18 @@ function speakWithTTS(text: string) {
     speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'en-US'
-    utterance.rate = 0.9
+    utterance.rate = 0.8
     speechSynthesis.speak(utterance)
   }
+}
+
+function getAudioFileName(word: string): string {
+  return `${encodeURIComponent(word.trim())}.mp3`
+}
+
+function getGoogleTTSUrl(word: string): string {
+  const q = encodeURIComponent(word.trim())
+  return `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${q}`
 }
 
 interface QuestionCardProps {
@@ -45,16 +54,30 @@ export function QuestionCard({
     }
     speechSynthesis.cancel()
     
-    const audioPath = `/sounds/${word}.mp3`
-    const audio = new Audio(audioPath)
+    const localAudioPath = `/sounds/${getAudioFileName(word)}`
+    const audio = new Audio(localAudioPath)
     audioRef.current = audio
     
     audio.play().catch(() => {
-      speakWithTTS(word)
+      const googleAudio = new Audio(getGoogleTTSUrl(word))
+      audioRef.current = googleAudio
+      googleAudio.play().catch(() => {
+        speakWithTTS(word)
+      })
+      googleAudio.onerror = () => {
+        speakWithTTS(word)
+      }
     })
     
     audio.onerror = () => {
-      speakWithTTS(word)
+      const googleAudio = new Audio(getGoogleTTSUrl(word))
+      audioRef.current = googleAudio
+      googleAudio.play().catch(() => {
+        speakWithTTS(word)
+      })
+      googleAudio.onerror = () => {
+        speakWithTTS(word)
+      }
     }
   }, [])
 
