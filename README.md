@@ -1,6 +1,6 @@
-# Deutsch Vokabeln – German Vocabulary PWA
+# English Vocabulary Trainer PWA
 
-Mobile-first Progressive Web App for learning German vocabulary (B1–B2) with a learning-pool algorithm and spaced repetition.
+Mobile-first Progressive Web App for learning English vocabulary (A1-C2) with a learning-pool algorithm and spaced repetition.
 
 https://words-app-ten.vercel.app/
 
@@ -70,8 +70,8 @@ The app supports generating category-based B1-B2 words via Gemini with a server 
 
 ## Vocabulary
 
-- **Source**: `public/words.json` (array of `{ id, german, russian }`).
-- Example file has ~ 300  B1–B2 words (IT/job interview). Replace or extend with your own list (e.g. ~2000 words).
+- **Source**: `public/words.json` (array of `{ id, german, russian, category }`).
+- The current sample is English-Russian and category-based. You can replace or extend it with your own list.
 
 
 ## PWA

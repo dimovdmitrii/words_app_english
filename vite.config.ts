@@ -31,18 +31,16 @@ function extractJSONArray(rawText: string): unknown[] | null {
   }
 }
 
-function isLikelyGermanWord(value: string): boolean {
+function isLikelyEnglishWord(value: string): boolean {
   const text = String(value || '').trim()
   if (!text) return false
-  return /^[A-Za-zÄÖÜäöüß\- ]+$/.test(text)
+  return /^[A-Za-z\- ']+$/.test(text)
 }
 
 function isLikelyRussianText(value: string): boolean {
   const text = String(value || '').trim()
   if (!text) return false
-  // One-word Russian translation only (hyphenated form allowed).
-  if (/\s/.test(text)) return false
-  return /^[А-Яа-яЁё-]+$/.test(text)
+  return /^[А-Яа-яЁё0-9 ,().\-]+$/.test(text)
 }
 
 function parseCandidates(rawText: string): unknown[] | null {
@@ -63,19 +61,19 @@ function buildPrompt(
   existingGerman: string[]
 ): string {
   return [
-    `Generate exactly ${count} German vocabulary items for category "${category}".`,
+    `Generate exactly ${count} English vocabulary items for category "${category}".`,
     `Target CEFR level MUST be ${level}.`,
     'Return ONLY valid JSON.',
     'Preferred shape: [{"german":"...", "russian":"...", "level":"...","spellingOk":true,"translationAccurate":true}].',
     'Alternative valid shape: {"words":[...]} with same fields.',
     'Rules:',
-    '- german: correct spelling, natural German (no typos, no random forms).',
-    '- russian: accurate translation in exactly ONE Russian word.',
+    '- german: correct spelling, natural English (no typos, no random forms).',
+    '- russian: accurate Russian translation (single word or short phrase allowed).',
     '- level must exactly match requested band.',
     '- spellingOk must be true only if spelling is correct.',
     '- translationAccurate must be true only if translation is accurate.',
     '- Avoid duplicates and slang.',
-    `- Exclude these German words: ${JSON.stringify(existingGerman)}`
+    `- Exclude these English words: ${JSON.stringify(existingGerman)}`
   ].join('\n')
 }
 
@@ -132,7 +130,7 @@ async function generateWordsWithGemini(
       const translationAccurate = !(item && typeof item === 'object' && 'translationAccurate' in item && (item as { translationAccurate?: boolean }).translationAccurate === false)
 
       if (!german || !russian) continue
-      if (!isLikelyGermanWord(german) || !isLikelyRussianText(russian)) continue
+      if (!isLikelyEnglishWord(german) || !isLikelyRussianText(russian)) continue
       if (itemLevel && itemLevel !== safeLevel) continue
       if (!spellingOk || !translationAccurate) continue
 
@@ -236,9 +234,9 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'words.json'],
         manifest: {
-          name: 'Deutsch Vokabeln',
-          short_name: 'Vokabeln',
-          description: 'German vocabulary trainer – learn words with spaced repetition',
+          name: 'English Vocabulary Trainer',
+          short_name: 'English Vocab',
+          description: 'English vocabulary trainer - learn words with spaced repetition',
           theme_color: '#0f172a',
           background_color: '#0f172a',
           display: 'fullscreen',

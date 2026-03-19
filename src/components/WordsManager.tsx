@@ -90,7 +90,7 @@ export function WordsManager({
 
   // — Generate tab —
   const [generateCategory, setGenerateCategory] = useState('')
-  const [generateLevel, setGenerateLevel] = useState<CefrBand>('B1-B2')
+  const [generateLevel, setGenerateLevel] = useState<CefrBand>('A1-A2')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generateInfo, setGenerateInfo] = useState<string | null>(null)
@@ -608,7 +608,7 @@ export function WordsManager({
             <form className="wm-form" onSubmit={handleAddSubmit} noValidate>
               <div className="wm-form-field">
                 <label className="wm-form-label" htmlFor="wm-german">
-                  German word *
+                  English word *
                 </label>
                 <input
                   id="wm-german"
@@ -616,7 +616,7 @@ export function WordsManager({
                   type="text"
                   value={german}
                   onChange={e => { setGerman(e.target.value); setAddError(null) }}
-                  placeholder="der Tisch, gehen, schnell…"
+                  placeholder="table, go, fast..."
                   autoComplete="off"
                   ref={germanRef}
                 />
@@ -654,7 +654,7 @@ export function WordsManager({
                   onBlur={() => {
                     window.setTimeout(() => setShowCategorySuggestions(false), 120)
                   }}
-                  placeholder="например: IT, Verben…"
+                  placeholder="for example: travel, work, technology..."
                   autoComplete="off"
                 />
                 {showCategorySuggestions && filteredCategorySuggestions.length > 0 && (
@@ -703,7 +703,7 @@ export function WordsManager({
                   type="text"
                   value={generateCategory}
                   onChange={(e) => setGenerateCategory(e.target.value)}
-                  placeholder="например: Reisen, Arbeit, Medizin..."
+                  placeholder="for example: travel, work, medicine..."
                   autoComplete="off"
                   list="wm-generate-cat-list"
                 />

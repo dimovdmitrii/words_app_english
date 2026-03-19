@@ -29,21 +29,20 @@ function extractRetryAfterSec(message) {
   return Math.ceil(sec)
 }
 
-function isLikelyGermanWord(value) {
+function isLikelyEnglishWord(value) {
   if (typeof value !== 'string') return false
   const text = value.trim()
   if (!text) return false
-  // Allow letters, umlauts, eszett, spaces and hyphens.
-  return /^[A-Za-zÄÖÜäöüß\- ]+$/.test(text)
+  // Allow English letters, spaces, hyphens and apostrophes.
+  return /^[A-Za-z\- ']+$/.test(text)
 }
 
 function isLikelyRussianText(value) {
   if (typeof value !== 'string') return false
   const text = value.trim()
   if (!text) return false
-  // One-word Russian translation only (hyphenated form allowed).
-  if (/\s/.test(text)) return false
-  return /^[А-Яа-яЁё-]+$/.test(text)
+  // Allow Russian phrases with spaces and punctuation.
+  return /^[А-Яа-яЁё0-9 ,().\-]+$/.test(text)
 }
 
 function parseCandidates(rawText) {
@@ -60,19 +59,19 @@ function parseCandidates(rawText) {
 
 function buildPrompt({ category, level, count, existingGerman }) {
   return [
-    `Generate exactly ${count} German vocabulary items for category "${category}".`,
+    `Generate exactly ${count} English vocabulary items for category "${category}".`,
     `Target CEFR level MUST be ${level}.`,
     'Return ONLY valid JSON.',
     'Preferred shape: [{"german":"...", "russian":"...", "level":"...","spellingOk":true,"translationAccurate":true}].',
     'Alternative valid shape: {"words":[...]} with same fields.',
     'Rules:',
-    '- german: correct spelling, natural German (no typos, no random forms).',
-    '- russian: accurate translation in exactly ONE Russian word.',
+    '- german: correct spelling, natural English (no typos, no random forms).',
+    '- russian: accurate Russian translation (single word or short phrase allowed).',
     '- level must exactly match requested band.',
     '- spellingOk must be true only if spelling is correct.',
     '- translationAccurate must be true only if translation is accurate.',
     '- Avoid duplicates and slang.',
-    `- Exclude these German words: ${JSON.stringify(existingGerman)}`
+    `- Exclude these English words: ${JSON.stringify(existingGerman)}`
   ].join('\n')
 }
 
@@ -151,7 +150,7 @@ export default async function handler(req, res) {
         const translationAccurate = item?.translationAccurate !== false
 
         if (!german || !russian) continue
-        if (!isLikelyGermanWord(german) || !isLikelyRussianText(russian)) continue
+        if (!isLikelyEnglishWord(german) || !isLikelyRussianText(russian)) continue
         if (itemLevel && itemLevel !== level) continue
         if (!spellingOk || !translationAccurate) continue
 
