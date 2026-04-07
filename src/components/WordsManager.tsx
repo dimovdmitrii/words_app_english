@@ -3,6 +3,8 @@ import type { VocabEntry } from '../types'
 
 export type ManagerTab = 'categories' | 'words' | 'add' | 'generate'
 type WordsSubTab = 'active' | 'custom' | 'deleted'
+const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN ?? '').replace(/\/+$/, '')
+const GENERATE_WORDS_URL = `${API_ORIGIN}/api/generate-words`
 
 const CATEGORY_COLORS = [
   '#38bdf8', '#a78bfa', '#34d399', '#fbbf24',
@@ -226,7 +228,7 @@ export function WordsManager({
     count: number,
     excludedGerman: string[]
   ): Promise<Array<{ german: string; russian: string }>> => {
-    const response = await fetch('/api/generate-words', {
+    const response = await fetch(GENERATE_WORDS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

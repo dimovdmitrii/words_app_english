@@ -1,14 +1,23 @@
 import { useCallback, useState, useEffect, useRef } from 'react'
 import { MenuButton } from './Menu'
 
+function getSpeechSynthesis(): SpeechSynthesis | null {
+  if (!('speechSynthesis' in globalThis)) return null
+  return globalThis.speechSynthesis
+}
+
+function cancelSpeech() {
+  getSpeechSynthesis()?.cancel()
+}
+
 function speakWithTTS(text: string) {
-  if ('speechSynthesis' in window) {
-    speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = 'en-US'
-    utterance.rate = 0.8
-    speechSynthesis.speak(utterance)
-  }
+  const synth = getSpeechSynthesis()
+  if (!synth) return
+  synth.cancel()
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'en-US'
+  utterance.rate = 0.8
+  synth.speak(utterance)
 }
 
 function getAudioFileName(word: string): string {
@@ -52,7 +61,7 @@ export function QuestionCard({
       audioRef.current.pause()
       audioRef.current = null
     }
-    speechSynthesis.cancel()
+    cancelSpeech()
     
     const localAudioPath = `/sounds/${getAudioFileName(word)}`
     const audio = new Audio(localAudioPath)
@@ -91,7 +100,7 @@ export function QuestionCard({
       audioRef.current.pause()
       audioRef.current = null
     }
-    speechSynthesis.cancel()
+    cancelSpeech()
   }, [])
 
   useEffect(() => {
@@ -103,7 +112,7 @@ export function QuestionCard({
         audioRef.current.pause()
         audioRef.current = null
       }
-      speechSynthesis.cancel()
+      cancelSpeech()
     }
   }, [german, playSound])
 

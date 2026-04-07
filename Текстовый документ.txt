@@ -1,0 +1,80 @@
+You are porting Android (Capacitor 8) + Vite fixes from a reference German vocab PWA into an analogous English vocab app. Do not blindly copy German-specific logic (Gemini prompts, german/russian field names in vite.config.ts, or de-DE TTS) unless the English app uses the same API contract—only replicate patterns and wire your deployment and language.
+
+Required outcomes
+package.json
+
+build:android: run a version bump script first, then build and sync, e.g.
+node scripts/bump-android-version.mjs && tsc -b && vite build --mode android && npx cap sync android
+(or equivalent; see bump script below).
+icons:android: node scripts/generate-android-icons.mjs
+devDependency sharp if missing (for icon script).
+Version bump (scripts/bump-android-version.mjs, optional but recommended)
+
+On each build:android, increment versionCode by 1 in android/app/build.gradle.
+Increment versionName: if it matches x.y.z, bump the patch; if x.y, bump to x.(y+1).0; otherwise warn and only bump versionCode.
+Support SKIP_ANDROID_BUMP=1 to skip the bump for local test builds.
+.env.android
+
+VITE_API_ORIGIN=https://<your-deployed-app-host> (trailing slash stripped in code). Origin must serve POST /api/generate-words returning JSON with a words array compatible with the client.
+src/vite-env.d.ts
+
+Declare VITE_API_ORIGIN?: string on ImportMetaEnv.
+WordsManager.tsx
+
+GENERATE_WORDS_URL = import.meta.env.VITE_API_ORIGIN (strip trailing /) + /api/generate-words. All generate fetch calls use this absolute URL.
+vite.config.ts
+
+When mode === 'android', do not register VitePWA. Add a small plugin with transformIndexHtml that injects a <head> script: unregister all service workers, then location.reload() once if any were registered (fixes stale PWA SW → blank WebView).
+For non-android builds, keep VitePWA with manifest display: 'standalone' (not fullscreen).
+index.html
+
+Keep viewport-fit=cover on the viewport meta.
+Set <title>, meta description, and language-appropriate copy for the English app.
+App display name (launcher + browser + PWA + Capacitor)—keep in sync
+
+capacitor.config.ts: appName = desired short name (e.g. your product name).
+android/app/src/main/res/values/strings.xml: app_name and title_activity_main = same display name.
+vite.config.ts (inside VitePWA manifest): name and short_name = appropriate strings for install/PWA.
+AndroidManifest.xml: set android:label="<DisplayName>" on both <application> and the main launcher <activity> so the home-screen label does not depend on resource-merge quirks. Add xmlns:tools and on <application> use tools:replace="android:label" if manifest merger conflicts with a library.
+After changes, run npx cap sync android (or full build:android) and reinstall the app on device; old APKs keep the old label. Google Play “App name” in the store listing is separate from android:label.
+src/main.tsx
+
+Wrap <App /> in ErrorBoundary.
+Implement syncAppHeight(): set CSS variable --app-height from visualViewport?.height ?? innerHeight; listen on window resize and visualViewport resize/scroll; call syncAppHeight twice via requestAnimationFrame on startup.
+src/ErrorBoundary.tsx
+
+Class component: getDerivedStateFromError, componentDidCatch with logging, minimal fallback UI showing error.message.
+src/index.css
+
+Use --app-height for html, body, #root height/min-height.
+.card-header { z-index: 2 }.
+.hamburger: 48×48 tap target; .hamburger span width 20px (not full button width).
+QuestionCard.tsx
+
+Never use bare speechSynthesis; use a globalThis accessor and safe cancel/speak helpers.
+TTS / Google TTS URL language = English (en / en-US as appropriate), not German.
+Android MainActivity.java
+
+After super.onCreate: setTitle(R.string.app_name) (or your app name string) so recents/task title aligns with resources.
+WindowCompat.setDecorFitsSystemWindows(getWindow(), false), setStatusBarColor(TRANSPARENT), setNavigationBarColor to app background (reference #0f172a—match your theme).
+res/values/styles.xml (AppTheme.NoActionBar)
+
+android:navigationBarColor and android:statusBarColor = same background as the app (e.g. #0f172a).
+android:windowLayoutInDisplayCutoutMode = shortEdges.
+Launcher icons
+
+mipmap-anydpi-v26/ic_launcher.xml and ic_launcher_round.xml: @color/ic_launcher_background + @mipmap/ic_launcher_foreground.
+values/ic_launcher_background.xml: brand color for adaptive background.
+Remove drawable-v24/ic_launcher_foreground.xml if present so mipmap PNGs are used.
+Copy scripts/generate-android-icons.mjs: legacy + adaptive foreground sizes; sharp PNG compressionLevel: 9, adaptiveFiltering: true, effort: 10; opaque pad RGB aligned with ic_launcher_background.
+capacitor.config.ts
+
+Correct appId, appName, webDir: 'dist'.
+android/app/build.gradle
+
+Unique applicationId / namespace.
+versionCode must increase for every Play upload (handled by bump script if adopted).
+Verify
+
+npm run build:android succeeds.
+On device: no blank screen from SW; layout height correct; hamburger works; word generation hits your API; TTS does not crash; icons correct; launcher label matches chosen display name after fresh install/update.

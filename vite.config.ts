@@ -153,6 +153,15 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const geminiApiKey = env.GEMINI_API_KEY
   const geminiModel = env.GEMINI_MODEL || 'gemini-2.5-flash'
+  const isAndroidMode = mode === 'android'
+
+  const androidServiceWorkerCleanupPlugin = {
+    name: 'android-sw-cleanup',
+    transformIndexHtml(html: string) {
+      const script = `<script>(function(){if(!('serviceWorker'in navigator))return;navigator.serviceWorker.getRegistrations().then(function(regs){if(!regs.length)return;return Promise.all(regs.map(function(r){return r.unregister()})).then(function(){if(!sessionStorage.getItem('android-sw-reloaded')){sessionStorage.setItem('android-sw-reloaded','1');location.reload();}})}).catch(function(){});}());</script>`
+      return html.replace('</head>', `${script}</head>`)
+    }
+  }
 
   return {
     plugins: [
@@ -230,30 +239,34 @@ export default defineConfig(({ mode }) => {
           })
         }
       },
-      VitePWA({
-        registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'words.json'],
-        manifest: {
-          name: 'English Vocabulary Trainer',
-          short_name: 'English Vocab',
-          description: 'English vocabulary trainer - learn words with spaced repetition',
-          theme_color: '#0f172a',
-          background_color: '#0f172a',
-          display: 'fullscreen',
-          orientation: 'portrait',
-          scope: '/',
-          start_url: '/',
-          icons: [
-            { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-            { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' }
-          ],
-          categories: ['education']
-        },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,mp3}']
-        },
-        devOptions: { enabled: true }
-      })
+      ...(isAndroidMode
+        ? [androidServiceWorkerCleanupPlugin]
+        : [
+            VitePWA({
+              registerType: 'autoUpdate',
+              includeAssets: ['favicon.png', 'words.json'],
+              manifest: {
+                name: 'Vocab',
+                short_name: 'Vocab',
+                description: 'Vocab',
+                theme_color: '#0f172a',
+                background_color: '#0f172a',
+                display: 'standalone',
+                orientation: 'portrait',
+                scope: '/',
+                start_url: '/',
+                icons: [
+                  { src: '/favicon.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                  { src: '/favicon.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+                ],
+                categories: ['education']
+              },
+              workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,mp3}']
+              },
+              devOptions: { enabled: true }
+            })
+          ])
     ]
   }
 })

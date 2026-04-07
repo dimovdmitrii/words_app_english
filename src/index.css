@@ -1,6 +1,7 @@
 /* Mobile-first German Vocab PWA */
 :root {
   --bg: #0f172a;
+  --app-height: 100vh;
   --surface: #1e293b;
   --text: #e2e8f0;
   --muted: #94a3b8;
@@ -24,7 +25,8 @@ body {
   margin: 0;
   padding: 0;
   background: var(--bg);
-  height: 100%;
+  height: var(--app-height);
+  min-height: var(--app-height);
 }
 
 html {
@@ -37,13 +39,12 @@ body {
   line-height: 1.4;
   color: var(--text);
   overflow-x: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: var(--app-height);
 }
 
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: var(--app-height);
+  min-height: var(--app-height);
   display: flex;
   flex-direction: column;
 }
@@ -80,6 +81,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 2;
 }
 
 .card-label {
@@ -226,9 +228,9 @@ body {
   flex-direction: column;
   justify-content: center;
   gap: 5px;
-  width: 36px;
-  height: 36px;
-  padding: 8px;
+  width: 48px;
+  height: 48px;
+  padding: 14px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -237,7 +239,7 @@ body {
 
 .hamburger span {
   display: block;
-  width: 100%;
+  width: 20px;
   height: 2px;
   background: var(--text);
   border-radius: 1px;

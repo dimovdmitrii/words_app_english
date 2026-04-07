@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:android": "node scripts/bump-android-version.mjs && tsc -b && vite build --mode android && npx cap sync android",
+    "icons:android": "node scripts/generate-android-icons.mjs",
     "lint": "eslint . --ext ts,tsx",
     "preview": "vite preview",
     "generate:audio": "python scripts/generate_tts.py"
@@ -26,6 +28,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "sharp": "^0.34.4",
     "typescript": "~5.7.2",
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^0.21.1"
