@@ -1,85 +1,56 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
+import { mkdirSync, existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
-const ROOT = process.cwd()
-const SRC_ICON = path.resolve(ROOT, 'public', 'favicon.png')
-const RES_DIR = path.resolve(ROOT, 'android', 'app', 'src', 'main', 'res')
-const BG_COLOR = '#0f172a'
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const root = join(__dirname, '..')
+const publicDir = join(root, 'public')
+const androidRes = join(root, 'android/app/src/main/res')
 
-const LEGACY_SIZES = [
-  ['mipmap-mdpi', 48],
-  ['mipmap-hdpi', 72],
-  ['mipmap-xhdpi', 96],
-  ['mipmap-xxhdpi', 144],
-  ['mipmap-xxxhdpi', 192]
-]
+const SOURCE_PATH = join(publicDir, 'favicon.png')
 
-const ADAPTIVE_FOREGROUND_SIZES = [
-  ['mipmap-mdpi', 108],
-  ['mipmap-hdpi', 162],
-  ['mipmap-xhdpi', 216],
-  ['mipmap-xxhdpi', 324],
-  ['mipmap-xxxhdpi', 432]
-]
+const pad = { r: 1, g: 141, b: 251, alpha: 1 }
 
-const PNG_OPTIONS = {
+const legacy = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 }
+const adaptiveFg = { mdpi: 108, hdpi: 162, xhdpi: 216, xxhdpi: 324, xxxhdpi: 432 }
+
+const pngOut = {
   compressionLevel: 9,
   adaptiveFiltering: true,
   effort: 10
 }
 
-async function ensureDir(dir) {
-  await fs.mkdir(dir, { recursive: true })
+async function renderIcon(sourcePath, size, outFile, transparentBg) {
+  const bg = transparentBg ? { r: 0, g: 0, b: 0, alpha: 0 } : pad
+  await sharp(sourcePath)
+    .resize(size, size, { fit: 'contain', background: bg })
+    .png(pngOut)
+    .toFile(outFile)
 }
 
-async function generateLegacyIcon(size, outPath) {
-  await sharp(SRC_ICON)
-    .resize(size, size, { fit: 'contain' })
-    .png(PNG_OPTIONS)
-    .toFile(outPath)
-}
-
-async function generateAdaptiveForeground(size, outPath) {
-  // 72x72dp "safe zone" inside full 108x108 adaptive canvas.
-  const safeZone = Math.round(size * (72 / 108))
-  const pad = Math.floor((size - safeZone) / 2)
-  const safeLayer = await sharp(SRC_ICON)
-    .resize(safeZone, safeZone, { fit: 'contain' })
-    .png(PNG_OPTIONS)
-    .toBuffer()
-
-  await sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: { r: 15, g: 23, b: 42, alpha: 1 }
-    }
-  })
-    .composite([{ input: safeLayer, left: pad, top: pad }])
-    .png(PNG_OPTIONS)
-    .toFile(outPath)
-}
-
-async function run() {
-  for (const [folder, size] of LEGACY_SIZES) {
-    const outDir = path.join(RES_DIR, folder)
-    await ensureDir(outDir)
-    await generateLegacyIcon(size, path.join(outDir, 'ic_launcher.png'))
-    await generateLegacyIcon(size, path.join(outDir, 'ic_launcher_round.png'))
-  }
-
-  for (const [folder, size] of ADAPTIVE_FOREGROUND_SIZES) {
-    const outDir = path.join(RES_DIR, folder)
-    await ensureDir(outDir)
-    await generateAdaptiveForeground(size, path.join(outDir, 'ic_launcher_foreground.png'))
-  }
-
-  console.log(`Android icons generated from ${SRC_ICON} (bg ${BG_COLOR}).`)
-}
-
-run().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error))
+if (!existsSync(SOURCE_PATH)) {
+  console.error(
+    'Icon source file is missing: public/favicon.png'
+  )
   process.exit(1)
-})
+}
+
+console.log('Source:', SOURCE_PATH)
+
+for (const [name, size] of Object.entries(legacy)) {
+  const dir = join(androidRes, `mipmap-${name}`)
+  mkdirSync(dir, { recursive: true })
+  await renderIcon(SOURCE_PATH, size, join(dir, 'ic_launcher.png'), false)
+  await renderIcon(SOURCE_PATH, size, join(dir, 'ic_launcher_round.png'), false)
+  console.log(`wrote mipmap-${name} ic_launcher (+ round) ${size}px`)
+}
+
+for (const [name, size] of Object.entries(adaptiveFg)) {
+  const dir = join(androidRes, `mipmap-${name}`)
+  mkdirSync(dir, { recursive: true })
+  await renderIcon(SOURCE_PATH, size, join(dir, 'ic_launcher_foreground.png'), true)
+  console.log(`wrote mipmap-${name} ic_launcher_foreground ${size}px`)
+}
+
+console.log('Done.')

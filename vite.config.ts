@@ -256,7 +256,7 @@ export default defineConfig(({ mode }) => {
                 scope: '/',
                 start_url: '/',
                 icons: [
-                  { src: '/favicon.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+                  { src: '/favicon.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
                   { src: '/favicon.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
                 ],
                 categories: ['education']
